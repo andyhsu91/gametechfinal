@@ -63,7 +63,7 @@ void Environment::initEnvironment(Ogre::SceneManager*
     	bullet->setRigidBoxBody(snode, shapeDim, position, 0.0);
     }
     //NegWall YZ------------------------------------------------------------------
-    {   	    
+    /*{   	    
 		Ogre::Entity* ent = mSceneMgr->createEntity("NegYZEntity", "cube.mesh");
     	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
     		createChildSceneNode("snode2");
@@ -113,7 +113,7 @@ void Environment::initEnvironment(Ogre::SceneManager*
     	ent->setCastShadows(false);
 
     	bullet->setRigidBoxBody(snode, shapeDim, position, 0.0);
-    }
+    }*/
 	
 }
 //---------------------------------------------------------------------------

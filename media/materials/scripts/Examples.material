@@ -911,6 +911,111 @@ material Examples/Fish
 		}
 	}
 }
+material Examples/NinjaPurple
+{
+	technique
+	{
+		pass
+		{
+		
+			texture_unit
+			{
+				texture ninjaPurple.jpg
+			}
+		}
+	}
+}
+
+material Examples/NinjaOrange
+{
+	technique
+	{
+		pass
+		{
+		
+			texture_unit
+			{
+				texture ninjaOrange.jpg
+			}
+		}
+	}
+}
+
+material Examples/NinjaYellow
+{
+	technique
+	{
+		pass
+		{
+		
+			texture_unit
+			{
+				texture ninjaYellow.jpg
+			}
+		}
+	}
+}
+
+material Examples/NinjaBlue
+{
+	technique
+	{
+		pass
+		{
+		
+			texture_unit
+			{
+				texture ninjaRed.jpg
+			}
+		}
+	}
+}
+
+material Examples/NinjaBlack
+{
+	technique
+	{
+		pass
+		{
+		
+			texture_unit
+			{
+				texture ninjaRed.jpg
+			}
+		}
+	}
+}
+
+material Examples/NinjaGreen
+{
+	technique
+	{
+		pass
+		{
+		
+			texture_unit
+			{
+				texture ninjaGreen.jpg
+			}
+		}
+	}
+}
+
+material Examples/NinjaRed
+{
+	technique
+	{
+		pass
+		{
+		
+			texture_unit
+			{
+				texture ninjaRed.jpg
+			}
+		}
+	}
+}
+
 material Examples/Ninja
 {
 	technique

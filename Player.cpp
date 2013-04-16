@@ -5,6 +5,7 @@ Filename:    Player.cpp
 */
 #include "Player.h"
 #include "PhysicsSimulator.h"
+#include <OgreAnimationState.h>
 #include <cstdlib>
 
 
@@ -17,9 +18,9 @@ using namespace std;
 
 int edgeSize = 500;
 
-double paddleModifier = 400.0f;
+double paddleModifier = 100.0f;
 double paddleScale = 0.75f;
- 
+Ogre::Entity* ent;
 
 Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
 	std::string node, std::string color, bool isCloseToCamera)
@@ -29,10 +30,16 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
 	
-	Ogre::Entity* ent = mSceneMgr->createEntity("PosXYEntity" + node, "cube.mesh");
+	ent = mSceneMgr->createEntity("PosXYEntity" + node, "ninja.mesh");
    	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
   		createChildSceneNode(node);
-		
+	/*
+	Animation States for Ninja:
+		Attack1 Attack2 Attack3 Backflip Block Climb Crouch Death1 Death2 HighJump
+		Idle1 Idle2 Idle3 Jump JumpNoHeight Kick SideKick Spin Stealth Walk
+	*/
+	ent->getAnimationState("Walk")->setLoop(true);
+	ent->getAnimationState("Walk")->setEnabled(true);
 	Ogre::Vector3 shapeDim = Ogre::Vector3(edgeSize/5, edgeSize/5, 0.01);
    	
    	int size = edgeSize/2;
@@ -40,10 +47,10 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
    	if(!isCloseToCamera) {
    		size = -size;
    	}
-   	Ogre::Vector3 position = Ogre::Vector3(0, 0, size);
+   	Ogre::Vector3 position = Ogre::Vector3(0, -size, size);
 		
 	snode->attachObject(ent);
-	snode->scale(shapeDim.x/100, shapeDim.y/100, shapeDim.z);
+	snode->scale(.5, .5, .5);
 	snode->translate(position);
    	ent->setMaterialName(color);
    	ent->setCastShadows(false);
@@ -77,27 +84,35 @@ void Player::updatePosition(const Ogre::FrameEvent& evt)
 	paddle->getMotionState()->getWorldTransform(trans);
 	btVector3 pos = trans.getOrigin();
 
-	double movement_spd = paddleModifier * evt.timeSinceLastFrame;
-
+	//do not change this line, otherwise one step of animation doesn't match up with distance moved
+	float movement = 100.0 * evt.timeSinceLastFrame; 
+	
+	//change this line to make ninja walk faster/slower
+	float movement_scale = 2.0; 
+	
+	//need to change right/left to rotate instead of moving left/right
 	if( mPlayerState->paddleDir[PAD_RIGHT] )
 	{
-		if(pos.getX() < edgeSize/2)
-			pos.setX(pos.getX() + movement_spd);
+		pos.setX(pos.getX() + movement*movement_scale);
+		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
 	}
 	if( mPlayerState->paddleDir[PAD_LEFT] )
 	{
-		if(pos.getX() > -edgeSize/2)
-			pos.setX(pos.getX() - movement_spd);
+		pos.setX(pos.getX() - movement*movement_scale);
+		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
 	}
+	
+	
 	if( mPlayerState->paddleDir[PAD_UP] )
 	{
-		if(pos.getY() < edgeSize/2)
-			pos.setY(pos.getY() + movement_spd);
+		pos.setZ(pos.getZ() - movement*movement_scale);
+		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
+		
 	}
 	if( mPlayerState->paddleDir[PAD_DOWN] )
 	{
-		if(pos.getY() > -edgeSize/2)
-			pos.setY(pos.getY() - movement_spd);
+		pos.setZ(pos.getZ() + movement*movement_scale);
+		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
 	}
 		
 	if(forceUpdate) {

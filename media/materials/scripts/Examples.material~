@@ -35,7 +35,7 @@ material Examples/Wood
 	}
 }
 
-material Examples/DANBO
+material Examples/Tennis
 {
 	technique
 	{

@@ -196,7 +196,7 @@ void GTA2Application::createScene(void)
 	
 		// Create a ball
 		
-		ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer, isMultiplayer);
+		//ball.initBall(mSceneMgr, &bullet, sound_manager, &score, isServer, isMultiplayer);
 	
 		// Create a Light and set its position
 		Ogre::Light* light = mSceneMgr->createLight("MainLight");
@@ -206,12 +206,12 @@ void GTA2Application::createScene(void)
 	   
 		//PADDLE ------------------------------------------------------------------
 		if(!isMultiplayer){
-			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50", true));
+			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/NinjaRed", true));
 		}    
 		if(isMultiplayer) {
 		
-			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Red50", true));
-			players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/Green50", false));
+			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/NinjaRed", true));
+			players.push_back(new Player(mSceneMgr, &bullet, "paddlex1", "Examples/NinjaBlue", false));
 			
 			if(!isServer){
 				//move camera to opposite side if 
@@ -351,12 +351,13 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				if(isServer) {
 					//I am server
 					bullet.updateWorld(evt);
-					ball.update();
+					//ball.update();
 					players[0]->updatePosition(evt);
 
-					gameUpdate* ballState = ball.getBallGameState();
+					//gameUpdate* ballState = ball.getBallGameState();
 					gameUpdate* hostState = players[0]->getPlayerGameState();
 				
+					/*
 					multiUpdate->ballPos[0] = ballState->ballPos[0];
 					multiUpdate->ballPos[1] = ballState->ballPos[1];
 					multiUpdate->ballPos[2] = ballState->ballPos[2];
@@ -364,7 +365,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 					multiUpdate->ballVel[0] = ballState->ballVel[0];
 					multiUpdate->ballVel[1] = ballState->ballVel[1];
 					multiUpdate->ballVel[2] = ballState->ballVel[2];
-				
+					*/
 					multiUpdate->paddlePos[0] = hostState->paddlePos[0];
 					multiUpdate->paddlePos[1] = hostState->paddlePos[1];
 					multiUpdate->paddlePos[2] = hostState->paddlePos[2];
@@ -396,7 +397,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				
 					if(newPacketReceived){
 						players[0]->updatePosition(evt, network_manager->getGameUpdate());
-						ball.update(network_manager->getGameUpdate());	
+						//ball.update(network_manager->getGameUpdate());	
 						score.updateScore(network_manager->getGameUpdate());
 					}
 					else{
@@ -420,7 +421,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			else { 
 				//single player mode
 				bullet.updateWorld(evt);
-				ball.update();
+				//ball.update();
 				players[0]->updatePosition(evt);
 			
 				//Debugging only, delete next line
