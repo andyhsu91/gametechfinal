@@ -310,9 +310,10 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     bool ret = BaseApplication::frameRenderingQueued(evt);
     //Need to capture/update each device
     mMouse->capture();
-	mKeyboard->capture();
+	//mKeyboard->capture();
 
 	if(!mainMenu && !waitingMultiplayerMode){
+		mKeyboard->capture();
 		if(isMultiplayer){
 			if(isServer){
 				sprintf (scoreString, "MY SCORE: %d", score.getServerScore());
