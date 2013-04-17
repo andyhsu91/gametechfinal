@@ -28,9 +28,11 @@ public:
 private:
 	Ogre::SceneManager* mSceneMgr;
 	PhysicsSimulator* bullet;
-	btRigidBody* paddle;
+	btRigidBody* ninja;
 	btTransform trans;
-	
+	void enableState(int stateEnum, bool enabled, bool loop);
+	void updateAnimation(int state, double seconds);
+	void updateAllAnimations(double seconds);
 	gameUpdate* mPlayerState;
 	bool forceUpdate;
 };

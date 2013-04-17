@@ -7,7 +7,7 @@ Filename:    Player.cpp
 #include "PhysicsSimulator.h"
 #include <OgreAnimationState.h>
 #include <cstdlib>
-
+#include <string>
 
 #define PAD_LEFT  0
 #define PAD_RIGHT 1
@@ -18,9 +18,19 @@ using namespace std;
 
 int edgeSize = 500;
 
-double paddleModifier = 100.0f;
-double paddleScale = 0.75f;
+double ninjaModifier = 100.0f;
+double ninjaScale = 0.75f;
+
 Ogre::Entity* ent;
+
+enum ninjaStates {
+	Attack1, Attack2, Attack3, Backflip, Block, Climb, Crouch, Death1, Death2, HighJump,
+		Idle1, Idle2, Idle3, Jump, JumpNoHeight, Kick, SideKick, Spin, Stealth, Walk
+};
+
+bool stateActive[20];
+
+
 
 Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim, 
 	std::string node, std::string color, bool isCloseToCamera)
@@ -33,13 +43,9 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	ent = mSceneMgr->createEntity("PosXYEntity" + node, "ninja.mesh");
    	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
   		createChildSceneNode(node);
-	/*
-	Animation States for Ninja:
-		Attack1 Attack2 Attack3 Backflip Block Climb Crouch Death1 Death2 HighJump
-		Idle1 Idle2 Idle3 Jump JumpNoHeight Kick SideKick Spin Stealth Walk
-	*/
-	ent->getAnimationState("Walk")->setLoop(true);
-	ent->getAnimationState("Walk")->setEnabled(true);
+
+	enableState(Walk, true, true);
+	
 	Ogre::Vector3 shapeDim = Ogre::Vector3(edgeSize/5, edgeSize/5, 0.01);
    	
    	int size = edgeSize/2;
@@ -55,18 +61,18 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
    	ent->setMaterialName(color);
    	ent->setCastShadows(false);
    	
-   	paddle = bullet->setRigidBoxBody(snode, shapeDim, position, 0.0);
+   	ninja = bullet->setRigidBoxBody(snode, shapeDim, position, 0.0);
    	
-	paddle->setCollisionFlags( paddle->getCollisionFlags() | 
+	ninja->setCollisionFlags( ninja->getCollisionFlags() | 
 		btCollisionObject::CF_KINEMATIC_OBJECT);
-	paddle->setActivationState(DISABLE_DEACTIVATION);
+	ninja->setActivationState(DISABLE_DEACTIVATION);
 	
 	mPlayerState = new gameUpdate; //allocating mem on heap
 	
-	mPlayerState->paddleDir[PAD_UP] = false;
-	mPlayerState->paddleDir[PAD_DOWN] = false;
-	mPlayerState->paddleDir[PAD_LEFT] = false;
-	mPlayerState->paddleDir[PAD_RIGHT] = false;
+	mPlayerState->ninjaDir[PAD_UP] = false;
+	mPlayerState->ninjaDir[PAD_DOWN] = false;
+	mPlayerState->ninjaDir[PAD_LEFT] = false;
+	mPlayerState->ninjaDir[PAD_RIGHT] = false;
 
 }
 //---------------------------------------------------------------------------
@@ -77,57 +83,116 @@ Player::~Player(void)
 }
 btRigidBody* Player::getRigidBody(void)
 {
-	return paddle;
+	return ninja;
 }
+
+std::string getStringFromEnum(int ninjaState)
+{
+  switch (ninjaState)
+  {
+  	case Attack1: 	return "Attack1";
+	case Attack2: 	return "Attack2";
+	case Attack3: 	return "Attack3";
+	case Backflip:	return "Backflip";
+	case Block:		return "Block";
+	case Climb:		return "Climb";
+	case Crouch:	return "Crouch";
+	case Death1:	return "Death1";
+	case Death2:	return "Death2";
+	case HighJump:	return "HighJump";
+	case Idle1:		return "Idle1";
+	case Idle2:		return "Idle2";
+	case Idle3:		return "Idle3";
+	case Jump:		return "Jump";
+	case JumpNoHeight:return "JumpNoHeight";
+	case Kick:		return "Kick";
+	case SideKick:	return "SideKick";
+	case Spin:		return "Spin";
+	case Stealth:	return "Stealth";
+	case Walk:		return "Walk";
+	default:		return "Invalid";
+  };
+}
+
+void Player::enableState(int ninjaState, bool enabled, bool loop){
+	
+	/*for(int i=0; i<20; i++){
+		stateActive[i]=false;
+	}*/
+	
+	std::string animationState = getStringFromEnum(ninjaState);
+	if(animationState != "Invalid"){
+		ent->getAnimationState(animationState)->setLoop(loop);
+		ent->getAnimationState(animationState)->setEnabled(enabled);
+	}
+}
+
+void Player::updateAnimation(int ninjaState, double seconds){
+	std::string animationState = getStringFromEnum(ninjaState);
+	ent->getAnimationState(animationState)->addTime(seconds);
+}
+
+void Player::updateAllAnimations(double seconds){
+	for(int i=0; i<20; i++){
+		if(stateActive[i]){
+			std::string animationState = getStringFromEnum(i);
+			ent->getAnimationState(animationState)->addTime(seconds);
+		}
+	}
+}
+
 void Player::updatePosition(const Ogre::FrameEvent& evt)
 {
-	paddle->getMotionState()->getWorldTransform(trans);
+	ninja->getMotionState()->getWorldTransform(trans);
 	btVector3 pos = trans.getOrigin();
 
 	//do not change this line, otherwise one step of animation doesn't match up with distance moved
 	float movement = 100.0 * evt.timeSinceLastFrame; 
 	
 	//change this line to make ninja walk faster/slower
-	float movement_scale = 2.0; 
-	
+	float movement_scale = 5.0; 
+	bool updateWalk = false;
 	//need to change right/left to rotate instead of moving left/right
-	if( mPlayerState->paddleDir[PAD_RIGHT] )
+	if( mPlayerState->ninjaDir[PAD_RIGHT] )
 	{
 		pos.setX(pos.getX() + movement*movement_scale);
-		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
+		updateWalk = true;
 	}
-	if( mPlayerState->paddleDir[PAD_LEFT] )
+	if( mPlayerState->ninjaDir[PAD_LEFT] )
 	{
 		pos.setX(pos.getX() - movement*movement_scale);
-		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
+		updateWalk = true;
 	}
 	
 	
-	if( mPlayerState->paddleDir[PAD_UP] )
+	if( mPlayerState->ninjaDir[PAD_UP] )
 	{
 		pos.setZ(pos.getZ() - movement*movement_scale);
-		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
+		updateWalk = true;
 		
 	}
-	if( mPlayerState->paddleDir[PAD_DOWN] )
+	if( mPlayerState->ninjaDir[PAD_DOWN] )
 	{
 		pos.setZ(pos.getZ() + movement*movement_scale);
-		ent->getAnimationState("Walk")->addTime(evt.timeSinceLastFrame*movement_scale);
+		updateWalk = true;
 	}
-		
+	
+	if(updateWalk){
+		updateAnimation(Walk, evt.timeSinceLastFrame*movement_scale);
+	}
 	if(forceUpdate) {
-		pos.setX(mPlayerState->paddlePos[0]);
-		pos.setY(mPlayerState->paddlePos[1]);
-		pos.setZ(mPlayerState->paddlePos[2]);
+		pos.setX(mPlayerState->ninjaPos[0]);
+		pos.setY(mPlayerState->ninjaPos[1]);
+		pos.setZ(mPlayerState->ninjaPos[2]);
 		forceUpdate = false;	
 	}
 
 	trans.setOrigin(pos);
-	paddle->getMotionState()->setWorldTransform(trans);
+	ninja->getMotionState()->setWorldTransform(trans);
 	
-	mPlayerState->paddlePos[0] = pos.getX();
-	mPlayerState->paddlePos[1] = pos.getY();
-	mPlayerState->paddlePos[2] = pos.getZ();
+	mPlayerState->ninjaPos[0] = pos.getX();
+	mPlayerState->ninjaPos[1] = pos.getY();
+	mPlayerState->ninjaPos[2] = pos.getZ();
 
 }
 void Player::updatePosition(const Ogre::FrameEvent& evt, gameUpdate* update)
@@ -138,7 +203,19 @@ void Player::updatePosition(const Ogre::FrameEvent& evt, gameUpdate* update)
 }
 void Player::updatePadDirection(int element, bool value)
 {
-	mPlayerState->paddleDir[element] = value;
+	mPlayerState->ninjaDir[element] = value;
+	
+	bool allFalse = true;
+	for(int i=0; i<4 && allFalse; i++){
+		if(mPlayerState->ninjaDir[i]){
+			allFalse=false;
+		}
+	}
+	
+	if(allFalse){
+		//enableState(Walk, false, false);
+	}
+	
 }
 gameUpdate* Player::getPlayerGameState(void)
 {

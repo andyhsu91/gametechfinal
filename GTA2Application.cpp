@@ -204,7 +204,7 @@ void GTA2Application::createScene(void)
 	
 		env.initEnvironment(mSceneMgr, &bullet, isMultiplayer);
 	   
-		//PADDLE ------------------------------------------------------------------
+		//ninja ------------------------------------------------------------------
 		if(!isMultiplayer){
 			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/NinjaRed", true));
 		}    
@@ -366,14 +366,14 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 					multiUpdate->ballVel[1] = ballState->ballVel[1];
 					multiUpdate->ballVel[2] = ballState->ballVel[2];
 					*/
-					multiUpdate->paddlePos[0] = hostState->paddlePos[0];
-					multiUpdate->paddlePos[1] = hostState->paddlePos[1];
-					multiUpdate->paddlePos[2] = hostState->paddlePos[2];
+					multiUpdate->ninjaPos[0] = hostState->ninjaPos[0];
+					multiUpdate->ninjaPos[1] = hostState->ninjaPos[1];
+					multiUpdate->ninjaPos[2] = hostState->ninjaPos[2];
 				
-					multiUpdate->paddleDir[0] = hostState->paddleDir[0];
-					multiUpdate->paddleDir[1] = hostState->paddleDir[1];
-					multiUpdate->paddleDir[2] = hostState->paddleDir[2];
-					multiUpdate->paddleDir[3] = hostState->paddleDir[3];
+					multiUpdate->ninjaDir[0] = hostState->ninjaDir[0];
+					multiUpdate->ninjaDir[1] = hostState->ninjaDir[1];
+					multiUpdate->ninjaDir[2] = hostState->ninjaDir[2];
+					multiUpdate->ninjaDir[3] = hostState->ninjaDir[3];
 				
 					multiUpdate->topPlayerNum = score.getTopPlayerNum();
 					multiUpdate->scores[SERVER_SCORE] = score.getServerScore();
@@ -392,7 +392,7 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				} 
 				else {
 					//I am client
-					bullet.updateWorld(evt); //without this paddles don't move
+					bullet.updateWorld(evt); //without this ninjas don't move
 					players[1]->updatePosition(evt); //update myself normally
 				
 					if(newPacketReceived){
@@ -406,14 +406,14 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				
 					gameUpdate* clientState = players[1]->getPlayerGameState();
 				
-					multiUpdate->paddlePos[0] = clientState->paddlePos[0];
-					multiUpdate->paddlePos[1] =  clientState->paddlePos[1];
-					multiUpdate->paddlePos[2] = clientState->paddlePos[2];
+					multiUpdate->ninjaPos[0] = clientState->ninjaPos[0];
+					multiUpdate->ninjaPos[1] =  clientState->ninjaPos[1];
+					multiUpdate->ninjaPos[2] = clientState->ninjaPos[2];
 				
-					multiUpdate->paddleDir[PAD_UP]    =  clientState->paddleDir[PAD_UP];
-					multiUpdate->paddleDir[PAD_DOWN]  =  clientState->paddleDir[PAD_DOWN];
-					multiUpdate->paddleDir[PAD_LEFT]  =  clientState->paddleDir[PAD_RIGHT];
-					multiUpdate->paddleDir[PAD_RIGHT] =  clientState->paddleDir[PAD_LEFT];
+					multiUpdate->ninjaDir[PAD_UP]    =  clientState->ninjaDir[PAD_UP];
+					multiUpdate->ninjaDir[PAD_DOWN]  =  clientState->ninjaDir[PAD_DOWN];
+					multiUpdate->ninjaDir[PAD_LEFT]  =  clientState->ninjaDir[PAD_RIGHT];
+					multiUpdate->ninjaDir[PAD_RIGHT] =  clientState->ninjaDir[PAD_LEFT];
 				
 					network_manager->sendPacket(*multiUpdate);			
 				}				
@@ -423,7 +423,8 @@ bool GTA2Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				bullet.updateWorld(evt);
 				//ball.update();
 				players[0]->updatePosition(evt);
-			
+				gameUpdate* state = players[0]->getPlayerGameState();
+				mCamera->setPosition(Ogre::Vector3(state->ninjaPos[0],state->ninjaPos[1]+125.0,state->ninjaPos[2]+100.0));
 				//Debugging only, delete next line
 				//players[1]->updatePosition(evt);
 			}
