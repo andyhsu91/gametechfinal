@@ -470,7 +470,13 @@ bool GTA2Application::keyPressed( const OIS::KeyEvent& evt )
     	players[1]->updatePadDirection(PAD_DOWN, true);
         break; 
     */
-    
+    case OIS::MB_Left:
+    	
+    	break;
+    case OIS::KC_F:
+    	cout<<"Button Pressed"<<endl;
+    	players[0]->attack(true);
+    	break;
     case OIS::KC_D:
         if(!isMultiplayer || isServer){
         	players[0]->updatePadDirection(PAD_RIGHT, true);
@@ -533,7 +539,21 @@ bool GTA2Application::keyReleased( const OIS::KeyEvent& evt )
     case OIS::KC_K:
     	players[1]->updatePadDirection(PAD_DOWN, false);
         break; 
-   */     
+   */
+   	case OIS::MB_Left:
+    
+    	break;
+    case OIS::MB_Right:
+    
+    	break;
+    case OIS::MB_Middle:
+    
+    	break;     
+    case OIS::KC_F:
+    	cout<<"Button Pressed"<<endl;
+    	//players[0]->attack(false);
+    	break;	
+    	
     case OIS::KC_D:
         if(!isMultiplayer || isServer){
         	players[0]->updatePadDirection(PAD_RIGHT, false);

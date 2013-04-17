@@ -20,7 +20,7 @@ int edgeSize = 500;
 
 double ninjaModifier = 100.0f;
 double ninjaScale = 0.75f;
-
+bool test = true;
 Ogre::Entity* ent;
 
 enum ninjaStates {
@@ -69,6 +69,10 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	
 	mPlayerState = new gameUpdate; //allocating mem on heap
 	
+	for(int i=0; i<20; i++){
+		stateActive[i]=false;
+	}
+	
 	mPlayerState->ninjaDir[PAD_UP] = false;
 	mPlayerState->ninjaDir[PAD_DOWN] = false;
 	mPlayerState->ninjaDir[PAD_LEFT] = false;
@@ -116,12 +120,15 @@ std::string getStringFromEnum(int ninjaState)
 
 void Player::enableState(int ninjaState, bool enabled, bool loop){
 	
-	/*for(int i=0; i<20; i++){
+	for(int i=0; i<20; i++){
 		stateActive[i]=false;
-	}*/
+		std::string animationState = getStringFromEnum(i);
+		ent->getAnimationState(animationState)->setEnabled(false);
+	}
 	
 	std::string animationState = getStringFromEnum(ninjaState);
 	if(animationState != "Invalid"){
+		stateActive[ninjaState]=enabled;
 		ent->getAnimationState(animationState)->setLoop(loop);
 		ent->getAnimationState(animationState)->setEnabled(enabled);
 	}
@@ -141,6 +148,11 @@ void Player::updateAllAnimations(double seconds){
 	}
 }
 
+void Player::attack(bool val){
+	std::cout<<"Attacking"<<std::endl;
+	enableState(Attack3, val, true);
+
+}
 void Player::updatePosition(const Ogre::FrameEvent& evt)
 {
 	ninja->getMotionState()->getWorldTransform(trans);
@@ -178,8 +190,18 @@ void Player::updatePosition(const Ogre::FrameEvent& evt)
 	}
 	
 	if(updateWalk){
+		enableState(Walk, true, true);
 		updateAnimation(Walk, evt.timeSinceLastFrame*movement_scale);
 	}
+	
+	if(stateActive[Attack3]=true){
+		if(test){
+			std::cout<<"Animating Attack"<<std::endl;
+			test=false;
+		}
+		updateAnimation(Attack3, evt.timeSinceLastFrame);
+	}
+	
 	if(forceUpdate) {
 		pos.setX(mPlayerState->ninjaPos[0]);
 		pos.setY(mPlayerState->ninjaPos[1]);

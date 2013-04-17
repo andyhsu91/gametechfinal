@@ -23,6 +23,7 @@ public:
 	void updatePosition(const Ogre::FrameEvent& evt);
 	void updatePosition(const Ogre::FrameEvent& evt, gameUpdate* update);
 	void updatePadDirection(int element, bool value);
+	void attack(bool val);
 	gameUpdate* getPlayerGameState(void);
 
 private:
