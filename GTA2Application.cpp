@@ -206,7 +206,7 @@ void GTA2Application::createScene(void)
 	   
 		//ninja ------------------------------------------------------------------
 		if(!isMultiplayer){
-			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/NinjaRed", true));
+			players.push_back(new Player(mSceneMgr, &bullet, "paddlex0", "Examples/Robot", true));
 		}    
 		if(isMultiplayer) {
 		

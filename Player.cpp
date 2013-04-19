@@ -40,7 +40,7 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
 	mSceneMgr = pSceneMgr;
 	bullet = sim;
 	
-	ent = mSceneMgr->createEntity("PosXYEntity" + node, "ninja.mesh");
+	ent = mSceneMgr->createEntity("PosXYEntity" + node, "robot.mesh");
    	Ogre::SceneNode* snode = mSceneMgr->getRootSceneNode()->
   		createChildSceneNode(node);
 
@@ -56,9 +56,13 @@ Player::Player(Ogre::SceneManager* pSceneMgr, PhysicsSimulator* sim,
    	Ogre::Vector3 position = Ogre::Vector3(0, -size, size);
 		
 	snode->attachObject(ent);
-	snode->scale(.5, .5, .5);
+	snode->scale(1, 1, 1);
 	snode->translate(position);
+	//snode->rotate(Ogre::Vector3(0,1,0), Ogre::Radian(90.0));
    	ent->setMaterialName(color);
+   	
+   	//snode->yaw(Ogre::Radian(Ogre::Degree(90.0)));
+   	snode->setOrientation(1.0, 0.0, 90.0, 0.0);
    	ent->setCastShadows(false);
    	
    	ninja = bullet->setRigidBoxBody(snode, shapeDim, position, 0.0);
@@ -94,10 +98,10 @@ std::string getStringFromEnum(int ninjaState)
 {
   switch (ninjaState)
   {
-  	case Attack1: 	return "Attack1";
-	case Attack2: 	return "Attack2";
-	case Attack3: 	return "Attack3";
-	case Backflip:	return "Backflip";
+  	case Attack1: 	return "Shoot";
+	case Attack2: 	return "Shoot";
+	case Attack3: 	return "Shoot";
+	/*case Backflip:	return "Backflip";
 	case Block:		return "Block";
 	case Climb:		return "Climb";
 	case Crouch:	return "Crouch";
@@ -112,9 +116,11 @@ std::string getStringFromEnum(int ninjaState)
 	case Kick:		return "Kick";
 	case SideKick:	return "SideKick";
 	case Spin:		return "Spin";
-	case Stealth:	return "Stealth";
+	case Stealth:	return "Stealth";*/
 	case Walk:		return "Walk";
 	default:		return "Invalid";
+	
+	
   };
 }
 
@@ -123,7 +129,9 @@ void Player::enableState(int ninjaState, bool enabled, bool loop){
 	for(int i=0; i<20; i++){
 		stateActive[i]=false;
 		std::string animationState = getStringFromEnum(i);
-		ent->getAnimationState(animationState)->setEnabled(false);
+		if(animationState != "Invalid"){
+			ent->getAnimationState(animationState)->setEnabled(false);
+		}
 	}
 	
 	std::string animationState = getStringFromEnum(ninjaState);
@@ -143,7 +151,9 @@ void Player::updateAllAnimations(double seconds){
 	for(int i=0; i<20; i++){
 		if(stateActive[i]){
 			std::string animationState = getStringFromEnum(i);
-			ent->getAnimationState(animationState)->addTime(seconds);
+			if(animationState != "Invalid"){
+				ent->getAnimationState(animationState)->addTime(seconds);
+			}
 		}
 	}
 }
@@ -156,6 +166,7 @@ void Player::attack(bool val){
 void Player::updatePosition(const Ogre::FrameEvent& evt)
 {
 	ninja->getMotionState()->getWorldTransform(trans);
+	
 	btVector3 pos = trans.getOrigin();
 
 	//do not change this line, otherwise one step of animation doesn't match up with distance moved
@@ -210,7 +221,9 @@ void Player::updatePosition(const Ogre::FrameEvent& evt)
 	}
 
 	trans.setOrigin(pos);
+	
 	ninja->getMotionState()->setWorldTransform(trans);
+	mSceneMgr->getSceneNode("paddlex0")->yaw(Ogre::Radian(Ogre::Degree(90.0)));
 	
 	mPlayerState->ninjaPos[0] = pos.getX();
 	mPlayerState->ninjaPos[1] = pos.getY();
