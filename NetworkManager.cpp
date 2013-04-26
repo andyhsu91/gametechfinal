@@ -36,6 +36,8 @@ TCPsocket serverSocket; 	//server only socket where clients can request connecti
 TCPsocket peerSocket; 		//socket for communicating once connection is established
 IPaddress myIp; 			//this computer's ip address
 IPaddress *remoteIP; 		//other computer's ip address
+int theirIp;				//Ip address read in from theirIp.txt, Server will broadcast to this Ip address as well if it exists
+
 
 char buffer[BUFFER_SIZE];	//buffer for gameUpdates to be copied into when packets are recieved
 char* conversion;			//pointer to last intToIpAddr conversion to avoid memory leaks
@@ -45,7 +47,7 @@ long packetsSent = 0;
 
 NetworkManager::NetworkManager() {
 	connectionOpen=false;
-	
+	theirIp = -1;
 	if(NM_debug){std::cout<<"Entered Network Manager()"<<std::endl;}
 	
 	//check for server, and attempt to become client
@@ -78,8 +80,9 @@ NetworkManager::NetworkManager() {
 		
 		std::cout<<"Server has opened socket with IP: "<< intToIpAddr(myIp.host)<<" and Port: "<<SDLNet_Read16(&myIp.port)<<std::endl;
 		isServer=true;
-		
-		broadcastToClients();
+		getTheirIp();
+		broadcastToClients("255.255.255.255");
+		broadcastToClients(intToIpAddr(theirIp));
 		usleep(1000);
 		checkForClient();
 	}
@@ -96,6 +99,39 @@ bool NetworkManager::isConnectionOpen(){
 bool NetworkManager::isThisServer(){
 	return isServer;
 }
+
+
+int NetworkManager::getTheirIp(){
+
+	//read theirIp.txt to get ip address as string
+	std::string line;
+  	std::ifstream myfile;
+  	usleep(5000); //wait 5 milliseconds
+  	myfile.open("theirIp.txt");
+  	
+  	bool gotString = false;
+  	
+	if (myfile.is_open() && myfile.good()){
+		std::getline(myfile,line);
+		myfile.close();
+		gotString = true;
+	}
+	
+	if(gotString){
+		//convert string to 32 bit integer
+		int retVal = inet_addr(line.c_str());
+		if(NM_debug){std::cout<<"ifconfig says myIp="<<line<<", converted to "<<retVal<<std::endl;}
+		theirIp = retVal;
+		//return 32 bit ip address in network byte order
+		return retVal;
+	}
+	else{
+		if(NM_debug){std::cout<<"Could not read file."<<line<<std::endl;}
+		return -1;
+	}
+
+}
+
 
 int NetworkManager::getMyIp(){
 	//get this computer's ip address in network byte order
@@ -134,6 +170,7 @@ int NetworkManager::getMyIp(){
 char*  NetworkManager::intToIpAddr(long ipAddress){
 	return intToIpAddr(ipAddress, true);
 }
+
 
 char*  NetworkManager::intToIpAddr(long ipAddress, bool networkByteOrder){
 	
@@ -183,6 +220,7 @@ bool NetworkManager::checkForServer(){
 	if(NM_debug){std::cout<<"Listening "<<serverSearchTimeout<<" seconds for server broadcast packets..."<<std::endl;}
 	//check for server broadcast packet
 	while(count<(serverSearchTimeout*1000) && !serverFound){
+	
 		int errorCode = SDLNet_UDP_Recv(UdpSocket, packet);
 		
 		if(errorCode == 1){
@@ -252,7 +290,8 @@ void NetworkManager::waitForClientConnection(){
 	std::cout<<"Broadcasting on local network for "<<clientSearchTimeout<<" seconds every "<<serverBroadcastTimeout<<" milliseconds..."<<std::endl;
 	
 	while(!connectionOpen && millisecondsWaited<=clientSearchTimeout*1000){
-		broadcastToClients();
+		broadcastToClients("255.255.255.255");
+		broadcastToClients(intToIpAddr(theirIp)); //hack to get Network Manager to work over internet as well as LAN
 		usleep(clientResponseTimeout*1000); //wait for little bit to give clients time to respond
 		checkForClient();
 		usleep((serverBroadcastTimeout-clientResponseTimeout)*1000); //wait some more so that we don't congest the network 
@@ -262,14 +301,14 @@ void NetworkManager::waitForClientConnection(){
 	if(NM_debug){std::cout<<"Exiting waitForClientConnection()"<<std::endl;}
 }
 
-void NetworkManager::broadcastToClients(){
+void NetworkManager::broadcastToClients(const char* host){
 	//server is broadcasting to all connected devices on local network to PORT_NUM
 	//clients should listen for the packet and respond by requesting a TCP connection
 	UDPpacket* packet = SDLNet_AllocPacket(sizeof(IPaddress));
 	UDPsocket UdpSocket = SDLNet_UDP_Open(0);
 
 	IPaddress addr;
-	SDLNet_ResolveHost(&addr, "255.255.255.255", PORT_NUM); //sending to 255.255.255.255 broadcasts the packet on the local network
+	SDLNet_ResolveHost(&addr, host, PORT_NUM); //sending to 255.255.255.255 broadcasts the packet on the local network
 
 	packet->address.host = addr.host;
 	packet->address.port = addr.port;
@@ -277,6 +316,7 @@ void NetworkManager::broadcastToClients(){
 	memcpy(packet->data, &myIp, sizeof(myIp));
 	
 	SDLNet_UDP_Send(UdpSocket, -1, packet); //broadcast packet
+	
 	
 }
 

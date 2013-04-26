@@ -15,7 +15,7 @@ class NetworkManager {
 		bool checkForServer();
 		bool checkForPackets();
 		bool sendPacket(gameUpdate update);
-		void broadcastToClients();
+		void broadcastToClients(const char* host);
 		gameUpdate* getGameUpdate();
 		bool isConnectionOpen();
 		bool isThisServer();
@@ -23,6 +23,7 @@ class NetworkManager {
 		char* intToIpAddr(long ipAddress);
 		char* intToIpAddr(long ipAddr, bool networkByteOrder);
 		int getMyIp();
+		int getTheirIp();
 		
 	private:
 		void readPacketToBuffer();
